@@ -11,7 +11,6 @@ session = DBSession()
 class RestaurantHandler():
 
     def getall(self):
-        print("Getting all restaurants")
         return session.query(Restaurant).all()
     
     def get(self, id):
@@ -30,4 +29,27 @@ class RestaurantHandler():
     def update(self, restaurant):
         session.add(restaurant)
         session.commit()
-        
+
+class MenuItemHandler():
+
+    def getall(self):
+        return session.query(MenuItem).all()
+    
+    def get(self, id):
+        return session.query(MenuItem).filter_by(id = id).one() 
+    
+    def getbyrestaurant(self, restaurant):
+        return session.query(MenuItem).filter_by(restaurant = restaurant).all()
+    
+    def delete(self, id):
+        menuitem = session.query(MenuItem).filter_by(id = id).one()
+        session.delete(menuitem)
+        session.commit()
+    
+    def create(self, menuitem):
+        session.add(menuitem)
+        session.commit()
+    
+    def update(self, menuitem):
+        session.add(menuitem)
+        session.commit()

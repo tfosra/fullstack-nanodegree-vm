@@ -1,4 +1,4 @@
-from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
+from http.server import BaseHTTPRequestHandler, HTTPServer
 import cgi
 
 from database_setup import Restaurant, MenuItem
@@ -35,12 +35,47 @@ class webserverHandler(BaseHTTPRequestHandler):
                 for restaurant in restaurants:
                     output += restaurant.name
                     output += "</br>"
-                    output += "<a href ='#' >Edit </a> "
+                    output += "<a href ='/restaurants/%d/edit' >Edit </a> "%restaurant.id
                     output += "</br>"
-                    output += "<a href =' #'> Delete </a>"
+                    output += "<a href ='/restaurants/%d/delete'> Delete </a>"%restaurant.id
                     output += "</br></br>"
                 output += "</body></html>"
                 self.wfile.write(output)
+                return
+            
+            if self.path.endswith("/edit") and self.path.split('/')[-3] == "restaurants" and self.path.split('/')[-1] == "edit":
+                id = self.path.split('/')[-2]
+                restaurant = rh.get(id)
+                if restaurant:
+                    self.send_response(200)
+                    self.send_header('Content-type', 'text/html')
+                    self.end_headers()
+                    output = ""
+                    output += "<html><body><h2>%s</h2>"%restaurant.name
+                    output += "<form method = 'POST' enctype = 'multipart/form-data' action='/restaurants/%d/edit'>"%restaurant.id
+                    output += "<input name='name' type='text' placeholder = 'Name' value='%s'>"%restaurant.name
+                    output += "<input type='submit' value='Update'></form>"
+                    output += "</body></html>"
+                    self.wfile.write(output)
+                else:
+                    raise IOError
+                return
+            
+            if self.path.endswith("/delete") and self.path.split('/')[-3] == "restaurants" and self.path.split('/')[-1] == "delete":
+                id = self.path.split('/')[-2]
+                restaurant = rh.get(id)
+                if restaurant:
+                    self.send_response(200)
+                    self.send_header('Content-type', 'text/html')
+                    self.end_headers()
+                    output = ""
+                    output += "<html><body><h2>Do you really want to delete '%s' ?</h2>"%restaurant.name
+                    output += "<form method = 'POST' enctype = 'multipart/form-data' action='/restaurants/%d/delete'>"%restaurant.id
+                    output += "<input type='submit' value='Delete'></form>"
+                    output += "</body></html>"
+                    self.wfile.write(output)
+                else:
+                    raise IOError
                 return
             
         except IOError:
@@ -49,8 +84,6 @@ class webserverHandler(BaseHTTPRequestHandler):
     def do_POST(self):
         try:
             if self.path.endswith("/restaurants/new"):
-                
-
                 ctype, pdict = cgi.parse_header(self.headers.getheader('content-type'))
                 if ctype == 'multipart/form-data':
                     fields = cgi.parse_multipart(self.rfile, pdict)
@@ -63,7 +96,37 @@ class webserverHandler(BaseHTTPRequestHandler):
                     self.send_header('Content-type', 'text/html')
                     self.send_header('Location', '/restaurants')
                     self.end_headers()
-        except:
+
+            if self.path.endswith("/edit") and self.path.split('/')[-3] == "restaurants" and self.path.split('/')[-1] == "edit":
+                ctype, pdict = cgi.parse_header(self.headers.getheader('content-type'))
+                if ctype == 'multipart/form-data':
+                    fields = cgi.parse_multipart(self.rfile, pdict)
+                    messagecontent = fields.get('name')
+                    
+                    id = self.path.split('/')[-2]
+                    restaurant = rh.get(id)
+                    restaurant.name = messagecontent[0]
+                    rh.update(restaurant)
+
+                    self.send_response(301)
+                    self.send_header('Content-type', 'text/html')
+                    self.send_header('Location', '/restaurants')
+                    self.end_headers()
+            
+            if self.path.endswith("/delete") and self.path.split('/')[-3] == "restaurants" and self.path.split('/')[-1] == "delete":
+                ctype, pdict = cgi.parse_header(self.headers.getheader('content-type'))
+                if ctype == 'multipart/form-data':
+                    fields = cgi.parse_multipart(self.rfile, pdict)
+                    
+                    id = self.path.split('/')[-2]
+                    rh.delete(id)
+
+                    self.send_response(301)
+                    self.send_header('Content-type', 'text/html')
+                    self.send_header('Location', '/restaurants')
+                    self.end_headers()
+        except Exception as e:
+            print(e)
             pass
 
 def main():
