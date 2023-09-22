@@ -38,8 +38,8 @@ class MenuItemHandler():
     def get(self, id):
         return session.query(MenuItem).filter_by(id = id).one() 
     
-    def getbyrestaurant(self, restaurant):
-        return session.query(MenuItem).filter_by(restaurant = restaurant).all()
+    def getbyrestaurant(self, restaurant_id):
+        return session.query(MenuItem).filter_by(restaurant_id = restaurant_id).all()
     
     def delete(self, id):
         menuitem = session.query(MenuItem).filter_by(id = id).one()
